@@ -92,7 +92,7 @@ def main():
 
         # Display the selected watermark preview
         if selected_watermark:
-            st.image(selected_watermark, caption=f"Selected Watermark {watermark_urls.index(selected_watermark) + 1}", use_column_width=True)
+            st.image(selected_watermark, caption=f"Selected Watermark {watermark_urls.index(selected_watermark) + 1}", use_column_width=False, width=150)
 
     else:
         uploaded_watermark = st.file_uploader("Upload a PNG watermark", type="png")
