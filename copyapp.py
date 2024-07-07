@@ -17,7 +17,7 @@ watermark_urls = [
     "https://thrassvent.de/wp-content/uploads/2024/07/COPY-LOGO-4.png"
 ]
 
-def add_watermark(input_pdf, watermark_source, transparency, style, is_url=True):
+def add_watermark(input_pdf, watermark_source, transparency, style, scale, is_url=True):
     # Fetch or read the watermark image
     if is_url:
         response = requests.get(watermark_source)
@@ -38,7 +38,7 @@ def add_watermark(input_pdf, watermark_source, transparency, style, is_url=True)
     img = utils.ImageReader(temp_image_path)
     img_width, img_height = img.getSize()
     aspect = img_height / float(img_width)
-    width = 1.5 * inch  # Adjust width for your watermark
+    width = scale * letter[0]  # Scale relative to the full width of the page
     height = aspect * width
     
     if style == 'mosaic':
@@ -99,7 +99,11 @@ def main():
         selected_watermark = uploaded_watermark
 
     style = st.selectbox("Watermark Style", ["mosaic", "centered"])
+    
+    st.write("**Transparency:** Recommended transparency is from 0.1 to 0.2.")
     transparency = st.slider("Transparency", 0.0, 0.5, 0.5)
+
+    scale = st.slider("Scale (as a percentage of the page width)", 0.1, 1.0, 0.5)
 
     if st.button("Merge and Watermark PDFs"):
         if uploaded_files and selected_watermark:
@@ -114,7 +118,7 @@ def main():
             merged_pdf.write(temp_merged_pdf)
             temp_merged_pdf.close()
 
-            watermarked_pdf_stream = add_watermark(temp_merged_pdf.name, selected_watermark, transparency, style, is_url)
+            watermarked_pdf_stream = add_watermark(temp_merged_pdf.name, selected_watermark, transparency, style, scale, is_url)
             
             st.download_button(
                 label="Download Merged and Watermarked PDF",
