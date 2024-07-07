@@ -75,28 +75,11 @@ def main():
     uploaded_files = st.file_uploader("Upload PDFs", accept_multiple_files=True, type="pdf")
     
     st.write("Select a watermark:")
-    selected_watermark = None
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        if st.button("Select", key=1):
-            selected_watermark = watermark_urls[0]
-        st.image(watermark_urls[0], width=100)
-    
-    with col2:
-        if st.button("Select", key=2):
-            selected_watermark = watermark_urls[1]
-        st.image(watermark_urls[1], width=100)
-    
-    with col3:
-        if st.button("Select", key=3):
-            selected_watermark = watermark_urls[2]
-        st.image(watermark_urls[2], width=100)
-    
-    with col4:
-        if st.button("Select", key=4):
-            selected_watermark = watermark_urls[3]
-        st.image(watermark_urls[3], width=100)
+    selected_watermark = st.radio(
+        "Watermarks",
+        watermark_urls,
+        format_func=lambda x: x.split('/')[-1]  # Display only the file name in the radio button
+    )
 
     style = st.selectbox("Watermark Style", ["mosaic", "centered"])
     transparency = st.slider("Transparency", 0.0, 1.0, 0.5)
