@@ -17,10 +17,13 @@ watermark_urls = [
     "https://thrassvent.de/wp-content/uploads/2024/07/COPY-LOGO-4.png"
 ]
 
-def add_watermark(input_pdf, watermark_url, transparency, style):
-    # Fetch the watermark image from URL
-    response = requests.get(watermark_url)
-    watermark_image = io.BytesIO(response.content)
+def add_watermark(input_pdf, watermark_source, transparency, style, is_url=True):
+    # Fetch or read the watermark image
+    if is_url:
+        response = requests.get(watermark_source)
+        watermark_image = io.BytesIO(response.content)
+    else:
+        watermark_image = io.BytesIO(watermark_source.read())
     
     # Save watermark image to a temporary file
     temp_image_path = tempfile.NamedTemporaryFile(delete=False, suffix=".png").name
@@ -74,18 +77,33 @@ def main():
 
     uploaded_files = st.file_uploader("Upload PDFs", accept_multiple_files=True, type="pdf")
     
-    st.write("Select a watermark:")
-    selected_watermark = st.radio(
-        "Watermarks",
-        watermark_urls,
-        format_func=lambda x: x.split('/')[-1]  # Display only the file name in the radio button
+    watermark_option = st.radio(
+        "Select a watermark option",
+        ["Use preset logos", "Upload custom logo"]
     )
 
+    if watermark_option == "Use preset logos":
+        st.write("Select a watermark:")
+        selected_watermark = st.radio(
+            "Watermarks",
+            watermark_urls,
+            format_func=lambda x: f"Watermark {watermark_urls.index(x) + 1}",
+        )
+
+        # Display the selected watermark preview
+        if selected_watermark:
+            st.image(selected_watermark, caption=f"Selected Watermark {watermark_urls.index(selected_watermark) + 1}", use_column_width=True)
+
+    else:
+        uploaded_watermark = st.file_uploader("Upload a PNG watermark", type="png")
+        selected_watermark = uploaded_watermark
+
     style = st.selectbox("Watermark Style", ["mosaic", "centered"])
-    transparency = st.slider("Transparency", 0.0, 1.0, 0.5)
+    transparency = st.slider("Transparency", 0.0, 0.5, 0.5)
 
     if st.button("Merge and Watermark PDFs"):
         if uploaded_files and selected_watermark:
+            is_url = watermark_option == "Use preset logos"
             merged_pdf = PdfWriter()
             for uploaded_file in uploaded_files:
                 reader = PdfReader(uploaded_file)
@@ -96,7 +114,7 @@ def main():
             merged_pdf.write(temp_merged_pdf)
             temp_merged_pdf.close()
 
-            watermarked_pdf_stream = add_watermark(temp_merged_pdf.name, selected_watermark, transparency, style)
+            watermarked_pdf_stream = add_watermark(temp_merged_pdf.name, selected_watermark, transparency, style, is_url)
             
             st.download_button(
                 label="Download Merged and Watermarked PDF",
